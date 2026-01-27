@@ -37,26 +37,33 @@ library(ggthemes)
 ## Importing data  
 ```{r soy}
 soy <- read_csv("../data/soybeans_nass.csv")
+
+soy
 ```
 
 # EDA  
 ## Print `soy`  
 ```{r}
-soy
+soy # try to understand the ata and what is in each column.
 ```
 
 ## `soy` summary  
 ```{r }
 summary(soy)
+
+#production is yield times area
+#cv is coefficient of variation
 ```
 
 ## Exploring column classes and distinct cases  
 ```{r }
-soy
+soy %>%
+  diagnose() #gives you a quick overview of the column classes, distinct cases, and missingness
 ```
 
 ```{r}
-soy 
+soy %>%
+  distinct(County)
 ```
 
 For a list of abbreviations found in NASS data sets, click [here](https://quickstats.nass.usda.gov/src/glossary.pdf).  
@@ -65,10 +72,14 @@ For a list of abbreviations found in NASS data sets, click [here](https://quicks
 # Wrangling  
 ```{r soy_w}
 soy_w <- soy %>%
-  clean_names() 
+  clean_names() %>%
+  
   # Keeping only survey data 
-
+  filter(program == "SURVEY") %>% #if i had selected CENSUS and not only SURVEY
+  
   # Selecting desired variables
+  select(year, county, 
+         prod_bu = value) %>%
 
   # Replacing (D) for NA in prod_bu
 
@@ -77,6 +88,9 @@ soy_w <- soy %>%
   # Transforming prod_bu from character to numeric
 
   # Transforming production from bu to million bu
+  mutate(prod_mibu = prod_bu/10^6) %>%
+  select(-prod_bu)
+  
 
 soy_w
 ```
@@ -85,7 +99,9 @@ soy_w
 ## Plot production distribution  
 
 ```{r }
-ggplot(soy_w, aes(x = prod_mibu))
+ggplot(soy_w, aes(x = prod_mibu)) +
+  geom_density() +
+  geom_rug() # adds marks to show where there is a data point on the x-axis
 
 ```
 Where does most of the production is distributed (eye-ball where the peak of the plot above is on the x-axis)?  
@@ -93,7 +109,10 @@ Where does most of the production is distributed (eye-ball where the peak of the
 ## Plot production distribution by year  
 
 ```{r }
-
+ggplot(soy_w, aes(x = year,
+                  y = prod_mibu,
+                  group = year)) +
+  geom_boxplot()
 ```
 On same year, some counties produced near zero while others producer a lot more (~ 1 million bushels).   
 
@@ -102,7 +121,8 @@ On same year, some counties produced near zero while others producer a lot more 
 ggplot(soy_w, aes(x = year,
                   y = prod_mibu,
                   color = county
-))
+)) +
+  geom_line(show.legend = F)
 
 ```
 Kind of messy to make sense, too many lines (one for each county).    
