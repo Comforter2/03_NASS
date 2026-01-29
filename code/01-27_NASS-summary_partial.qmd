@@ -269,4 +269,7 @@ soy_w %>%
 
 ```
 
+```{r}
+write_csv(soy_w, "../data/soybeans_nass_processed.csv")
+```
 
