@@ -109,10 +109,14 @@ Where does most of the production is distributed (eye-ball where the peak of the
 ## Plot production distribution by year  
 
 ```{r }
-ggplot(soy_w, aes(x = year,
+ggplot(soy_w %>%
+         filter(!(county %in% c("OTHER COUNTIES", "OTHER (COMBINED) COUNTIES"))), 
+       aes(x = year,
                   y = prod_mibu,
                   group = year)) +
   geom_boxplot()
+
+
 ```
 On same year, some counties produced near zero while others producer a lot more (~ 1 million bushels).   
 
@@ -132,7 +136,15 @@ Kind of messy to make sense, too many lines (one for each county).
 What was the highest production record of any county across all years? When did it happen and which county reported it?  
 
 ```{r }
+soy_w %>%
+  group_by(county) %>%
+  filter(prod_mibu == max(prod_mibu))
 
+soy_w %>%
+  arrange(desc(prod_mibu))
+
+soy_w %>%
+  slice_max(prod_mibu, n = 5)
 
 ```
 
@@ -141,65 +153,118 @@ What was the lowest production record of any county across all years? When did i
 
 
 ```{r }
+soy_w %>%
+  group_by(county) %>%
+  filter(prod_mibu == min(prod_mibu))
 
+soy_w %>%
+  arrange(prod_mibu)
+
+soy_w %>%
+  slice_min(prod_mibu, n = 5)
 
 ```
 At an average yield of 50 bu/ac, Glascock county would've only needed 1 field of 10 ac to make this cut. That's really not much at all.  
 
 ## Plot the average county production for each year  
 ```{r }
-soy_w 
+soy_w %>%
+  group_by(year) %>%
+  summarise(meanprod = mean(prod_mibu)) %>%
+  ggplot(aes(x = year,
+             y = meanprod)) +
+  geom_line()
+  
 
 ```
 
 ## What was the latest year reported?  
 ```{r}
-soy_w 
+soy_w %>%
+  summary()
 
+soy_w %>%
+  distinct(year) %>%
+  slice_max(year)
 ```
 
-## What was the highest production in 2023?  
-```{r}
-soy_w 
-
-```
-
-## Plot production over time for the highest producing county in 2023  
-
-```{r}
-soy_w 
-
-```
-
-## What was the lowest production in 2023?  
+## What was the highest production in 2024?  
 ```{r}
 soy_w %>%
-  filter(year == 2023) %>%
+  filter(year == 2024) %>%
+  arrange(desc(prod_mibu))
+
+```
+
+## Plot production over time for the highest producing county in 2024  
+
+```{r}
+soy_w %>%
+  filter(county == "BROOKS") %>%
+  ggplot(aes(x = year,
+             y = prod_mibu)) + 
+  geom_line() +
+  geom_point()
+
+```
+
+## What was the lowest production in 2024?  
+```{r}
+soy_w %>%
+  filter(year == 2024) %>%
   arrange(prod_mibu)
 ```
 
 ## Plot production over time for the lowest producing county in 2023  
 
 ```{r}
-soy_w 
+soy_w %>%
+  filter(county == "ELBERT")  %>%
+  ggplot(aes(x= year,
+             y = prod_mibu)) +
+  geom_point() +
+  geom_line()
 
 ```
 
 ## Plot production over time for both of these counties above  
 ```{r}
-soy_w 
+soy_w %>%
+  filter(county %in% c("ELBERT", "BROOKS")) %>%
+  ggplot(aes(x = year,
+             y = prod_mibu, 
+             colour = county,
+             shape = county)) +
+  geom_line() +
+  geom_point()
 
 
 ```
 ## Plot the state total production on each year 
 ```{r }
-soy_w 
+soy_w %>%
+  group_by(year) %>%
+  summarise(totalprod = sum(prod_mibu)) %>%
+  ggplot(aes(x = year,
+             y = totalprod)) +
+  geom_line(color = "blue") +
+  geom_point()
 
 ```
 ## Final: make the plot above publication-ready  
 
 ```{r }
-
+soy_w %>%
+  group_by(year) %>%
+  summarise(totalprod = sum(prod_mibu)) %>%
+  ggplot(aes(x = year,
+             y = totalprod)) +
+  geom_line(color = "blue") +
+  geom_point() +
+  labs(x = "Year",
+       y = "Total Soybean Production (million bu)") +
+  scale_x_continuous(breaks = seq(1960, 2024, 10)) +
+  theme_clean()
 
 
 ```
