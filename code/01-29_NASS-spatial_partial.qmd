@@ -96,8 +96,9 @@ ga_co_w
 
 ## Joining NASS and county  
 ```{r soy_sp}
-soy_sp = ga_co_w %>%
-  left_join(soy_w_all)
+soy_sp = soy_w_all %>%
+  left_join(ga_co_w) %>%
+  st_as_sf()
 
 soy_sp
 ```
@@ -105,9 +106,14 @@ soy_sp
 - Check number of rows of product, compare to `soy_w_all`  
 
 # Maps - static  
-## Plot 2023 production by county as a map  
+## Plot 2024 production by county as a map  
 ```{r}
-soy_sp 
+soy_sp %>%
+  filter(year == 2024) %>%
+  ggplot() +
+  geom_sf(data = ga_co_w) +
+  geom_sf(aes(fill = prod_mibu)) 
+  
 ```
 
 ## Make map above publication ready  
@@ -119,22 +125,44 @@ soy_sp %>%
           size = .2)+
   geom_sf(data = ~., aes(fill = prod_mibu),
           size = .2
-  )
+  ) +
   # Selecting a colorblind-safe palette
+  scale_fill_viridis_c(option = "C") +
 
   # Changing fill legend label, giving a title
-
+  labs(fill = "Production \n(million bu)",
+       title = "County-level soybeans production in 2024") +
+  
   # Adding county names
+  geom_sf_text(aes(label = county, fontface = "bold"),
+                   size = 2,
+                   colour = "white") +
 
   # Changing to a cleaner theme
+  theme_void()
 
+ggsave("../output/soy-prod-24.png",
+       width = 6,
+       height = 4,
+       bg = "white")
 
 ```
 # Maps - interactive  
 ## Interactive map of most recent year
 ```{r}
-soy_sp_22 <- soy_sp %>%
+soy_sp_24 <- soy_sp %>%
           filter(year == 2024)
+
+mapview(ga_co_w,
+        col.regions = "white",
+        legend = NULL,
+        alpha.regions = 0.1,
+        map.types = "CartoDB.Positron") +
+
+mapview(soy_sp_24,
+        zcol = "prod_mibu",
+        alpha.regions = 1,
+        col.regions = plasma(20))
 
 ```
 
